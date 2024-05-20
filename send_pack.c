@@ -20,31 +20,29 @@
 
 #define MAX_PCKT_LENGTH 65535
 
-
 int main()
 {
     int sockfd;
     struct sockaddr_ll dst;
-    char *pckt[MAX_PCKT_LENGTH] = "this is  packet\n";
+    //char *pckt[MAX_PCKT_LENGTH] = '00 45 e2 04 70 87 00 08 e3 ff fc 04 08 00 45 00 05 0a 18 fa 40 00 3a 06 65 46 b9 e2 34 56 0a 20 c5 55 01 bb f7 f1 a0 b8 ab 38 c2 f5 1d 48 50 10 7e 93 85 60 00 00 aa 27 64 84 55 51 d1 71 83 57\n';
+    char pckt[MAX_PCKT_LENGTH] = "aa aa";
 
     sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
 
     if (sockfd <= 0)
     {
         perror("socket");
-
         exit(1);
     }
 
     dst.sll_family = PF_PACKET;
     dst.sll_protocol = htons(ETH_P_IP);
 
-    if ((dst.sll_ifindex = if_nametoindex("ens18")) == 0)
-    {
-        perror("Interface 'ens18' not found.\n");
-
-        exit(1);
-    }
+    // if ((dst.sll_ifindex = if_nametoindex("ens18")) == 0)
+    // {
+    //     perror("Interface 'ens18' not found.\n");
+    //     exit(1);
+    // }
 
     // Do destination ethernet MAC (08:00:27:54:4c:a1).
     dst.sll_addr[0] = 0x08;
@@ -59,7 +57,6 @@ int main()
     if (bind(sockfd, (struct sockaddr *)&dst, sizeof(dst)) < 0)
     {
         perror("connect");
-
         exit(1);
     }
 
@@ -99,26 +96,29 @@ int main()
     iphdr->daddr = inet_addr("127.0.0.1");
     iphdr->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + 30);
     iphdr->check = 0;
-    //iphdr->check = ip_fast_csum(iphdr, iphdr->ihl);
+    iphdr->check = 0X2D34;
+    //ip_fast_csum(iphdr, iphdr->ihl);
 
     // Fill out UDP header.
-    udphdr->source = htons(27000);
-    udphdr->dest = htons(27015);
+    udphdr->source = ntohs(27000);
+    udphdr->dest = ntohs(27015);
     udphdr->len = htons(sizeof(struct udphdr) + 30);
     udphdr->check = 0;
+    udphdr->check = 0X2D34;
     //udphdr->check = csum_tcpudp_magic(iphdr->saddr, iphdr->daddr, sizeof(struct udphdr) + 30, IPPROTO_UDP, csum_partial(udphdr, sizeof(struct udphdr) + 30, 0));
 
 // Send packet
-    uint16_t sent;
-    int len = ntohs(iphdr->tot_len) + sizeof(struct ethhdr) + 30;
+    // uint16_t sent;
+    // int len = ntohs(iphdr->tot_len) + sizeof(struct ethhdr) + 30;
 
-    if ((sent = sendto(sockfd, pckt, len, 0, (struct sockaddr *)&dst, sizeof(dst))) < 0)
-    //if ((sent = write(sockfd, pckt, len)) < 0)
-    {
-        perror("sendto");
-    }
+    // if ((sent = sendto(sockfd, pckt, len, 0, (struct sockaddr *)&dst, sizeof(dst))) < 0)
+    // //if ((sent = write(sockfd, pckt, len)) < 0)
+    // {
+    //     perror("sendto");
+    // }
 
-    fprintf(stdout, "Sent %d of data. %d is IPHdr len. %d is len.\n", sent, iphdr->tot_len, len);
+    //fprintf(stdout, "Sent %d of data. %d is IPHdr len. %d is len.\n", sent, iphdr->tot_len, len);
+    printf("Packet info:\n Eth header:\n    dest MAC %02X:%02X:%02X:%02X:%02X:%02X, source MAC %02X:%02X:%02X:%02X:%02X:%02X, Eth hdr len %d, IP type %d\n IP header:\n     IP hdr len %d, IP ver %d, frag offset %d, id 0x%04X, TL proto %d, tos %d, ttl %d, src IP addr %d, dst IP addr %d, tot len %d, checksum 0x%04X\n UDP header:\n     port src %d, dst src %d, len %d, checksum 0x%04X\n", dst.sll_addr[0], dst.sll_addr[1], dst.sll_addr[2], dst.sll_addr[3], dst.sll_addr[4], dst.sll_addr[5], ethhdr->h_source[0], ethhdr->h_source[1], ethhdr->h_source[2], ethhdr->h_source[3], ethhdr->h_source[4], ethhdr->h_source[5], dst.sll_halen, ethhdr->h_proto, iphdr->ihl,  iphdr->version, iphdr->frag_off, iphdr->id, iphdr->protocol, iphdr->tos, iphdr->ttl, iphdr->saddr, iphdr->daddr, iphdr->tot_len, iphdr->check, udphdr->source, udphdr->dest, udphdr->len, udphdr->check);
 
     close(sockfd);
 

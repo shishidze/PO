@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#define MAX_PCKT_LENGTH 65535
+
 int changePort(int newPort) {
     printf("Do you want to change input port? [y / n] \n");
     char decision;
@@ -102,12 +104,13 @@ int main(){
     send(infoconn, &depth, sizeof(depth), 0);
     send(infoconn, &port, sizeof(port), 0);
 
-    char Eth_frame_TCP[10000] = "\0";
+    char Eth_frame_TCP[MAX_PCKT_LENGTH] = "";
     //char Eth_frame_UDP;
 
-    recv(infoconn, Eth_frame_TCP, sizeof(Eth_frame_TCP), 0);
+    recv(infoconn, Eth_frame_TCP, MAX_PCKT_LENGTH, 0);
+    //sizeof(Eth_frame_TCP), 0);
     //recv(infoconn, Eth_frame_UDP, sizeof(Eth_frame_UDP), 0);
-
+    printf("\n");
     printf("%s\n",Eth_frame_TCP);
     sleep(10);
 

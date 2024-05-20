@@ -62,6 +62,7 @@
   "files.associations": {
     "winsock2.h": "c",
     "string.h": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "inttypes.h": "c"
   }
 }
