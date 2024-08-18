@@ -17,7 +17,7 @@
 // }
 
 int main(){
-    int sock, listener;
+    int sock, listener, tx_sock;
     struct sockaddr_in addr;
     struct sockaddr_in adm_addr;
 
@@ -36,10 +36,9 @@ int main(){
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(3425);
-    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    //INADDR_ANY;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
     //inet_addr("190.160.43.40");
-    //
+    //INADDR_LOOPBACK)
 
     if (bind(listener, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
         perror("connection failed\n");
@@ -91,20 +90,32 @@ int main(){
     remove("config.txt");
     rename("temp.txt","config.txt");
 
-
-    char *Eth_frame_TCP = "00 45 e2 04 70 87 00 08 e3 ff fc 04 08 00 45 00 05 0a 18 fa 40 00 3a 06 65 46 b9 e2 34 56 0a 20 c5 55 01 bb f7 f1 a0 b8 ab 38 c2 f5 1d 48 50 10 7e 93 85 60 00 00 aa 27 64 84 55 51 d1 71 83 57"; // TCP
-    //char *Eth_frame_UDP = "00 45 e2 04 70 87 00 08 e3 ff fc 04 08 00 45 00 01 58 9a c4 00 00 38 11 7f 65 0a 20 8d 88 0a 20 c5 a3 00 35 c1 80 01 44 7f b8 80 00 01 00 01 00 04 00 08 0c 73 61 66 65 62 72 6f 77 73"; //UDP
-
-    send(sock, Eth_frame_TCP, sizeof(Eth_frame_TCP), 0);
-    //send(sock, Eth_frame_UDP, sizeof(Eth_frame_UDP), 0);
-
-
     printf("%d\n", buf);
     printf("%d\n",port);
     printf("gratz\n");
     
-    close(sock);
-    close(listener);
+    // close(sock);
+    // close(listener);
+
+    tx_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+    if (listener < 0){
+        perror("closed socket\n");
+        exit(1);
+    }
+
+    if (connect(tx_sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+        perror("connection failed\n");
+        exit(3);
+    }
+
+    send(tx_sock, Eth_frame, sizeof(Eth_frame), 0);
+
+    // char *Eth_frame_TCP = "00 45 e2 04 70 87 00 08 e3 ff fc 04 08 00 45 00 05 0a 18 fa 40 00 3a 06 65 46 b9 e2 34 56 0a 20 c5 55 01 bb f7 f1 a0 b8 ab 38 c2 f5 1d 48 50 10 7e 93 85 60 00 00 aa 27 64 84 55 51 d1 71 83 57"; // TCP
+    // //char *Eth_frame_UDP = "00 45 e2 04 70 87 00 08 e3 ff fc 04 08 00 45 00 01 58 9a c4 00 00 38 11 7f 65 0a 20 8d 88 0a 20 c5 a3 00 35 c1 80 01 44 7f b8 80 00 01 00 01 00 04 00 08 0c 73 61 66 65 62 72 6f 77 73"; //UDP
+
+    // send(sock, Eth_frame_TCP, sizeof(Eth_frame_TCP), 0);
+    // //send(sock, Eth_frame_UDP, sizeof(Eth_frame_UDP), 0);
 
     return 0;
 }
